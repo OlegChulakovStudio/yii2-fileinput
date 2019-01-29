@@ -1,0 +1,18 @@
+{
+    "name": "oleg-chulakov-studio/yii2-fileinput",
+    "description": "Based on Krajee (kartik-v) advanced fileinput widget with no-ajax files removal posibility",
+    "license": "BSD-3-Clause",
+    "type": "library",
+    "require": {
+        "php": ">=5.6.0",
+        "yiisoft/yii2": "~2.0.13",
+        "yiisoft/yii2-jui": "~2.0.0",
+        "kartik-v/yii2-widget-fileinput": "~1.0",
+    },
+    "repositories": [],
+    "autoload": {
+        "psr-4": {
+            "chulakov\\fileinput\\": "src/"
+        }
+    }
+}
