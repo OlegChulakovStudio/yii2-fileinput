@@ -16,46 +16,22 @@ use yii\helpers\ArrayHelper;
  */
 class FileInput extends \kartik\file\FileInput
 {
-    /**
-     * Обязательное
-     */
-    public $required = false;
 
     /**
      * @inheritdoc
      */
     public function init()
     {
-        $this->options = ArrayHelper::merge([
-            'multiple' => false,
-            'accept' => 'image/*'
-        ], $this->options);
-
-        if (!$this->options['multiple']) {
-            $this->pluginOptions['overwriteInitial'] = true;
-            if ($this->required) {
-                $this->pluginOptions['fileActionSettings']['showRemove'] = false;
-            }
-        }
-
-        $this->pluginOptions = ArrayHelper::merge([
-            'initialPreviewAsData' => true,
-            'overwriteInitial' => false,
-            'showUpload' => false,
-            'showClose' => false,
-            'showRemove' => false,
-            'maxFileSize' => 5120,
-            'fileActionSettings' => [
-                'showDrag' => false,
-                'showRemove' => true,
-            ],
-        ], $this->pluginOptions);
 
         $events = [];
+//        if ($this->options['multiple']) {
+//            $events['change'] = 'function(){ syncFiles(); }';
+//        }
         if ($this->options['multiple']) {
-            $events['change'] = 'function(){ syncFiles(); }';
+            $events['change'] = "function(){ {$this->id}.markAll(); return false; }";
         }
-        $events['filepreremove'] = 'function(event, id, index) { return deleteFile($("#" + id).find(".kv-file-remove")); }';
+//        $events['filepreremove'] = 'function(event, id, index) { return deleteFile($("#" + id).find(".kv-file-remove")); }';
+        $events['filepreremove'] = "function(event, id, index) { {$this->id}.touch(id); return false; }";
         $this->pluginEvents = ArrayHelper::merge($events, $this->pluginEvents);
 
         parent::init();
@@ -121,6 +97,13 @@ JS;
     public function registerAssets()
     {
         parent::registerAssets();
-        $this->registerDeleteAsset();
+        $view = $this->getView();
+        RemovalSupervisorAssetBundle::register($view);
+        $formId = $this->field->form->id;
+        $formName = $this->model->formName();
+        $attributeName = rtrim($this->attribute, '[]');
+        $isMultiple = $this->options['multiple'] ? 'true' : 'false';
+
+        $view->registerJs("var {$this->id} = new FileRemovalSupervisor('{$formId}', '{$formName}', '{$attributeName}', {$isMultiple})", View::POS_END);
     }
 }
