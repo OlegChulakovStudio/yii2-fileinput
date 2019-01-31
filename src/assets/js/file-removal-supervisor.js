@@ -76,7 +76,8 @@ var FileRemovalSupervisor = (function($) {
      * Сколько полей проинициализировано, столько супервизоров будет создано.
      * Один супервизор содержит информацию о своих итемах (файлах)
      *
-     * @param string removalInputName
+     * @param string inputId уникальный идентификатор поля-оригинала
+     * @param string removalInputName полное наменование поля ввода для удаления
      * @constructor
      */
     var FileRemovalSupervisor = function (inputId, removalInputName) {
