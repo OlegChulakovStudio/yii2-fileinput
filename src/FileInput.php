@@ -1,6 +1,6 @@
 <?php
 /**
- * Файл виджета  FileInputWidget
+ * Файл виджета  FileInput
  *
  * @copyright Copyright (c) 2017, Oleg Chulakov Studio
  * @link http://chulakov.com/
@@ -18,77 +18,27 @@ class FileInput extends \kartik\file\FileInput
 {
 
     /**
+     * Постфикс, который будет подставлен к имени оригинального поля для формирования скрытого поля для удаления
+     * @var string
+     */
+    public $removalInputPostfix = 'Deleted';
+
+    /**
      * @inheritdoc
      */
     public function init()
     {
-
         $events = [];
-//        if ($this->options['multiple']) {
-//            $events['change'] = 'function(){ syncFiles(); }';
-//        }
-        if ($this->options['multiple']) {
-            $events['change'] = "function(){ {$this->id}.markAll(); return false; }";
+
+        if ($this->isMultiple) {
+            $events['change'] = "function(){ {$this->jsSupervisorInstanceName}.markAll(); return false; }";
         }
-//        $events['filepreremove'] = 'function(event, id, index) { return deleteFile($("#" + id).find(".kv-file-remove")); }';
-        $events['filepreremove'] = "function(event, id, index) { {$this->id}.touch(id); return false; }";
+
+        $events['filepreremove'] = "function(event, id, index) { {$this->jsSupervisorInstanceName}.touch(id); return false; }";
+
         $this->pluginEvents = ArrayHelper::merge($events, $this->pluginEvents);
 
         parent::init();
-    }
-
-    /**
-     * Регистрация скриптов удаления файла
-     *
-     * @throws \yii\base\InvalidConfigException
-     */
-    protected function registerDeleteAsset()
-    {
-        $formName = $this->model->formName();
-        $attributeDeleted = trim($this->attribute,'[]') . 'Deleted';
-        $formPostfix = $this->options['multiple'] ? '[]' : '';
-
-        $script = <<< JS
-var deletedFilesCache = [];
-var inputName = "{$formName}[{$attributeDeleted}]{$formPostfix}";
-
-$(document).on('click', '.kv-file-remove', function () {
-    deleteFile($(this));
-});
-
-function syncFiles() {
-    $('#' + deletedFilesCache.join(',#')).each(function(index, value) {
-        deleteFile($(value).find('.kv-file-remove'));
-    });
-}
-function deleteFile(elem) {
-    var input = '<input class="kv-deleted-item" type="hidden" name="' + inputName + '" value="' + elem.data('key') + '">';
-    var frame = elem.closest('.file-preview-frame');
-
-    frame.append(input);
-    markPreviewDeleted(elem, frame);
-    reindexDelete();
-
-    return false;
-}
-
-function markPreviewDeleted(elem, frame) {
-    if (deletedFilesCache.indexOf(frame.attr('id')) === -1) {
-        deletedFilesCache.push(frame.attr('id'));
-    }
-    frame.css('opacity', 0.5);
-    elem.attr('disabled', true);
-}
-
-function reindexDelete() {
-    $(".kv-deleted-item").each(function(index) {
-        var input = $(this);
-        var newName = input.attr('name').replace(/\[([0-9]*)\]/, '[' + index + ']');
-        input.attr('name', newName);
-    });
-}
-JS;
-        $this->getView()->registerJs($script,View::POS_END);
     }
 
     /**
@@ -97,13 +47,82 @@ JS;
     public function registerAssets()
     {
         parent::registerAssets();
-        $view = $this->getView();
-        RemovalSupervisorAssetBundle::register($view);
-        $formId = $this->field->form->id;
-        $formName = $this->model->formName();
-        $attributeName = rtrim($this->attribute, '[]');
-        $isMultiple = $this->options['multiple'] ? 'true' : 'false';
 
-        $view->registerJs("var {$this->id} = new FileRemovalSupervisor('{$formId}', '{$formName}', '{$attributeName}', {$isMultiple})", View::POS_END);
+        $view = $this->getView();
+
+        RemovalSupervisorAssetBundle::register($view);
+
+        $view->registerJs(
+            "var {$this->jsSupervisorInstanceName} = new FileRemovalSupervisor('{$this->options['id']}', '{$this->getRemovalInputName()}')",
+            View::POS_READY
+        );
+    }
+
+    /**
+     * Наименование формы, к которой принадлежит поле
+     * @return string
+     * @throws \yii\base\InvalidConfigException
+     *
+     */
+    protected function getFormName()
+    {
+        if ($this->hasModel()) {
+            return $this->model->formName();
+        }
+
+        return '';
+    }
+
+    /**
+     * Возвращает наименование атрибута модели или имя поля
+     * @return string
+     */
+    protected function getAttributeName()
+    {
+        if ($this->hasModel()) {
+            $name = $this->attribute;
+        } else {
+            $name = $this->name;
+        }
+
+        return rtrim($name, '[]');
+    }
+
+    /**
+     * Проверяет включен ли мультивыбор
+     * @return bool
+     */
+    protected function getIsMultiple()
+    {
+        if (isset($this->options['multiple'])  && $this->options['multiple']) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Формирует полное наименование инпута
+     *
+     * @return string
+     */
+    protected function getRemovalInputName()
+    {
+        $attribute = $this->attributeName . $this->removalInputPostfix;
+
+        if ($formName = $this->formName) {
+            $inputName = "{$formName}[{$attribute}]";
+        }
+
+        return $inputName . ($this->isMultiple ? "[]" : "");
+    }
+
+    /**
+     * Возвращает наименование JS-переменной для хранения контейнера супервизора
+     * @return string
+     */
+    protected function getJsSupervisorInstanceName()
+    {
+        return "fsp{$this->id}";
     }
 }

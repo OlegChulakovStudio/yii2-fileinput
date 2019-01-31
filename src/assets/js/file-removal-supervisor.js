@@ -76,21 +76,19 @@ var FileRemovalSupervisor = (function($) {
      * Сколько полей проинициализировано, столько супервизоров будет создано.
      * Один супервизор содержит информацию о своих итемах (файлах)
      *
-     * @param formId
-     * @param formName
-     * @param attributeName
-     * @param isMultiple
+     * @param string removalInputName
      * @constructor
      */
-    var FileRemovalSupervisor = function (formId, formName, attributeName, isMultiple) {
+    var FileRemovalSupervisor = function (inputId, removalInputName) {
 
-        this.$form = $('#' + formId);
+        this.$parent = $("#" + inputId).closest('.file-input');
+
         this.itemsStorage = [];
-        this.removalInputName = formName + '[' + attributeName + 'Deleted]' + (isMultiple ? '[]' : '');
+        this.removalInputName = removalInputName;
 
         var supervisor = this;
 
-        this.$form.on('click', '.kv-file-remove', function (event) {
+        this.$parent.on('click', '.kv-file-remove', function (event) {
 
             var item = new RemovalItem(
                 $(this).closest('.file-preview-frame').attr('id'),
