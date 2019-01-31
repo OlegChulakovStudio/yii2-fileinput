@@ -1,6 +1,6 @@
 <?php
 /**
- * Файл виджета  FileInput
+ * Файл виджета FileInput
  *
  * @copyright Copyright (c) 2017, Oleg Chulakov Studio
  * @link http://chulakov.com/
@@ -9,13 +9,18 @@
 namespace chulakov\fileinput;
 
 use yii\web\View;
-use yii\helpers\ArrayHelper;
 
 /**
  * Класс виджета FileInput
  */
 class FileInput extends \kartik\file\FileInput
 {
+
+    /**
+     * Маршрут Ajax-действия, производящего изменение порядка следования карточек
+     * @var mixed
+     */
+    public $sortActionRoute;
 
     /**
      * Постфикс, который будет подставлен к имени оригинального поля для формирования скрытого поля для удаления
@@ -28,17 +33,59 @@ class FileInput extends \kartik\file\FileInput
      */
     public function init()
     {
-        $events = [];
+        parent::init();
 
-        if ($this->isMultiple) {
-            $events['change'] = "function(){ {$this->jsSupervisorInstanceName}.markAll(); return false; }";
+        $this->attachOnChange();
+        $this->attachPreRemove();
+        $this->attachFileSorted();
+    }
+
+    /**
+     * При каждом обновлении виджет происходит его полный ререндер.
+     * Для этих целей после каждого обновления мы проходитмся по всем отмеченным на удаления файлам заново
+     * и восстанавливаем скрытые поля
+     */
+    protected function attachOnChange()
+    {
+        if (!isset($this->pluginEvents['change']) && $this->isMultiple) {
+            $this->pluginEvents['change'] = "function(){ {$this->jsSupervisorInstanceName}.markAll(); return false; }";
+        }
+    }
+
+    /**
+     * Перед удалением конкретного плашки-файла важно применить свой механизм, а не тот, который предлагает Krajee
+     */
+    protected function attachPreRemove()
+    {
+        if (!isset($this->pluginEvents['filepreremove'])) {
+            $this->pluginEvents['filepreremove'] = "function(event, id, index) { {$this->jsSupervisorInstanceName}.touch(id); return false; }";
+        }
+    }
+
+    /**
+     * После изменения порядка элемента, фрмируем URL и посылаем ajax-запрос на физическое изменение порядка
+     */
+    protected function attachFileSorted()
+    {
+        if (!isset($this->pluginEvents['filesorted'])) {
+
+            if ($this->sortActionRoute) {
+                $url = \yii\helpers\Url::to($this->sortActionRoute);
+                $this->pluginEvents['filesorted'] = 'function(event, params) { $.post("' . $url . '",{ sort:params }); }';
+                // Включаем отображение возможности перетаскивания
+                $this->pluginOptions['fileActionSettings']['showDrag'] = true;
+            } else {
+                $this->pluginOptions['fileActionSettings']['showDrag'] = false;
+            }
+
+        } else {
+
+            if (!isset($this->pluginOptions['fileActionSettings']['showDrag'])) {
+                $this->pluginOptions['fileActionSettings']['showDrag'] = true;
+            }
+
         }
 
-        $events['filepreremove'] = "function(event, id, index) { {$this->jsSupervisorInstanceName}.touch(id); return false; }";
-
-        $this->pluginEvents = ArrayHelper::merge($events, $this->pluginEvents);
-
-        parent::init();
     }
 
     /**

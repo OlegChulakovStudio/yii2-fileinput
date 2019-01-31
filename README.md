@@ -11,10 +11,11 @@ Configuration of widget for multiple images uploading
 
     ...
 
-    <?= $form->field($model, 'images[]')->widget(\chulakov\fileinput\FileInput::className(), [
+    <?= $form->field($model, 'images[]')->widget(FileInput::className(), [
         'options' => [
             'multiple' => true
         ],
+        'sortActionRoute' => ['/gallery/main/sort'],
         'pluginOptions' => [
             'initialPreview' => $model->getImagesInitial(),
             'initialPreviewConfig' => $model->getImagesInitialConfig(),
@@ -23,7 +24,6 @@ Configuration of widget for multiple images uploading
             'showClose' => false,
             'showRemove' => false,
             'fileActionSettings' => [
-                'showDrag' => true,
                 'showRemove' => true,
             ],
         ],
@@ -38,4 +38,6 @@ Configuration of widget for multiple images uploading
 
     <?php ActiveForm::end(); ?>
 ```
+The configuration parameter `sortActionRoute` determines the route to ajax-action for relocate item (change order) in DB level.
+The Drag-n-drop icon will appear automatically if the `sortActionRoute` parameter is set.
 ### Single image uploading
