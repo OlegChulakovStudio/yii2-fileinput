@@ -1,5 +1,6 @@
 var FileRemovalSupervisor = (function($) {
 
+
     /**
      * Конструктор инстанса удаляемой сущности файла
      * @param string frameId уникальный идешник фрейм-плашки
