@@ -6,7 +6,7 @@
  * @link http://chulakov.com/
  */
 
-namespace chulakov\fileinput;
+namespace chulakov\fileinput\assets;
 
 use yii\web\AssetBundle;
 
@@ -39,6 +39,6 @@ class RemovalSupervisorAssetBundle extends AssetBundle
      */
     public function init()
     {
-        $this->sourcePath = __DIR__ . '/assets';
+        $this->sourcePath = __DIR__ . '/static';
     }
 }

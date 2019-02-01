@@ -2,13 +2,14 @@
 /**
  * Файл виджета FileInput
  *
- * @copyright Copyright (c) 2017, Oleg Chulakov Studio
+ * @copyright Copyright (c) 2019, Oleg Chulakov Studio
  * @link http://chulakov.com/
  */
 
-namespace chulakov\fileinput;
+namespace chulakov\fileinput\widgets;
 
 use yii\web\View;
+use chulakov\fileinput\assets\RemovalSupervisorAssetBundle;
 
 /**
  * Класс виджета FileInput
@@ -105,12 +106,14 @@ class FileInput extends \kartik\file\FileInput
                 
             },
             error: function ( jqXHR, textStatus, errorThrown ) {
+                var errors = [];
+                
                 if (jqXHR.responseJSON) {
-                    error = jqXHR.responseJSON.message;
+                    errors.push(jqXHR.responseJSON.message);
                 } else {
-                    error = jqXHR.responseJSON.message;
+                    errors.push(jqXHR.responseJSON.message);
                 }
-                alert(error);
+                
             }
         });
     }
