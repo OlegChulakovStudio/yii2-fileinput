@@ -71,7 +71,51 @@ class FileInput extends \kartik\file\FileInput
 
             if ($this->sortActionRoute) {
                 $url = \yii\helpers\Url::to($this->sortActionRoute);
-                $this->pluginEvents['filesorted'] = 'function(event, params) { $.post("' . $url . '",{ sort:params }); }';
+                $this->pluginEvents['filesorted'] =
+<<<JS
+    function(event, params) {
+        var data = {};
+        
+        var currentItem = params.stack[params.newIndex];
+        var previousItem = params.stack[params.newIndex - 1];
+        var nextItem = params.stack[params.newIndex + 1];
+        
+        data.currentKey = currentItem.key;
+        
+        if (typeof previousItem != "undefined") {
+            data.previousKey = previousItem.key; 
+        } else {
+            data.previousKey = null;
+        }
+        
+        if (typeof nextItem != "undefined") {
+            data.nextKey = nextItem.key;
+        } else {
+            data.nextKey = null;
+        }
+        
+        var \$input = $(this);
+        var \$form = $(this).closest('form');
+        
+        $.ajax({
+            url: '$url',
+            type: 'get',
+            data: data,
+            success: function (data, textStatus, jqXHR) {
+                
+            },
+            error: function ( jqXHR, textStatus, errorThrown ) {
+                if (jqXHR.responseJSON) {
+                    error = jqXHR.responseJSON.message;
+                } else {
+                    error = jqXHR.responseJSON.message;
+                }
+                alert(error);
+            }
+        });
+    }
+JS;
+
                 // Включаем отображение возможности перетаскивания
                 $this->pluginOptions['fileActionSettings']['showDrag'] = true;
             } else {
