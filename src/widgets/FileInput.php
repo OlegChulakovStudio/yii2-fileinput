@@ -36,9 +36,37 @@ class FileInput extends \kartik\file\FileInput
     {
         parent::init();
 
+        $this->initInitialPreview();
+        $this->initInitialPreviewConfig();
         $this->attachOnChange();
         $this->attachPreRemove();
         $this->attachFileSorted();
+    }
+
+    /**
+     * Если миниатюры отображения файлов не заданы через конфигурацию виджета,
+     * то производится получить информацию о них у модели через методы поведения @see \chulakov\fileinput\behaviors\FileModelBehavior
+     */
+    protected function initInitialPreview()
+    {
+        if (!isset($this->pluginOptions['initialPreview'])) {
+            if ($this->hasModel() && $this->model->hasMethod('getInitialPreview')) {
+                $this->pluginOptions['initialPreview'] = $this->model->getInitialPreview();
+            }
+        }
+    }
+
+    /**
+     * Если конфигурация отображения файлов не задана через конфигурацию виджета,
+     * то производится получить информацию о ней у модели через методы поведения @see \chulakov\fileinput\behaviors\FileModelBehavior
+     */
+    protected function initInitialPreviewConfig()
+    {
+        if (!isset($this->pluginOptions['initialPreviewConfig'])) {
+            if ($this->hasModel() && $this->model->hasMethod('getInitialPreviewConfig')) {
+                $this->pluginOptions['initialPreviewConfig'] = $this->model->getInitialPreviewConfig();
+            }
+        }
     }
 
     /**
