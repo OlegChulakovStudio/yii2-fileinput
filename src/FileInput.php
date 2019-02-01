@@ -71,7 +71,6 @@ class FileInput extends \kartik\file\FileInput
 
             if ($this->sortActionRoute) {
                 $url = \yii\helpers\Url::to($this->sortActionRoute);
-//                $this->pluginEvents['filesorted'] = 'function(event, params) { $.post("' . $url . '",{ sort:params }); }';
                 $this->pluginEvents['filesorted'] =
 <<<JS
     function(event, params) {
@@ -95,11 +94,25 @@ class FileInput extends \kartik\file\FileInput
             data.nextKey = null;
         }
         
-        console.log(data);
+        var \$input = $(this);
+        var \$form = $(this).closest('form');
         
-        // $.post("' . $url . '", data);
-        
-          // $.post("' . $url . '",{ sort:params });
+        $.ajax({
+            url: '$url',
+            type: 'get',
+            data: data,
+            success: function (data, textStatus, jqXHR) {
+                
+            },
+            error: function ( jqXHR, textStatus, errorThrown ) {
+                if (jqXHR.responseJSON) {
+                    error = jqXHR.responseJSON.message;
+                } else {
+                    error = jqXHR.responseJSON.message;
+                }
+                alert(error);
+            }
+        });
     }
 JS;
 
