@@ -8,6 +8,7 @@
 
 namespace chulakov\fileinput\widgets;
 
+use yii\helpers\Html;
 use yii\web\View;
 use chulakov\fileinput\assets\RemovalSupervisorAssetBundle;
 
@@ -30,6 +31,12 @@ class FileInput extends \kartik\file\FileInput
     public $removalInputPostfix = 'Deleted';
 
     /**
+     * Наименование атрибута с ранее загруженными сущностями файлов
+     * @var string
+     */
+    public $attachedFilesAttribute;
+
+    /**
      * @inheritdoc
      */
     public function init()
@@ -50,8 +57,8 @@ class FileInput extends \kartik\file\FileInput
     protected function initInitialPreview()
     {
         if (!isset($this->pluginOptions['initialPreview'])) {
-            if ($this->hasModel() && $this->model->hasMethod('getInitialPreview')) {
-                $this->pluginOptions['initialPreview'] = $this->model->getInitialPreview();
+            if ($this->hasModel() && $this->model->hasMethod('getInitialPreview') && $this->attachedFilesAttribute) {
+                $this->pluginOptions['initialPreview'] = $this->model->getInitialPreview($this->attachedFilesAttribute);
             }
         }
     }
@@ -63,8 +70,8 @@ class FileInput extends \kartik\file\FileInput
     protected function initInitialPreviewConfig()
     {
         if (!isset($this->pluginOptions['initialPreviewConfig'])) {
-            if ($this->hasModel() && $this->model->hasMethod('getInitialPreviewConfig')) {
-                $this->pluginOptions['initialPreviewConfig'] = $this->model->getInitialPreviewConfig();
+            if ($this->hasModel() && $this->model->hasMethod('getInitialPreviewConfig') && $this->attachedFilesAttribute) {
+                $this->pluginOptions['initialPreviewConfig'] = $this->model->getInitialPreviewConfig($this->attachedFilesAttribute);
             }
         }
     }
@@ -206,8 +213,8 @@ JS;
         } else {
             $name = $this->name;
         }
-
-        return rtrim($name, '[]');
+        
+        return Html::getAttributeName($name);
     }
 
     /**

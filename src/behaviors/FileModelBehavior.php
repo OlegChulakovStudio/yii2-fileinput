@@ -11,6 +11,7 @@ namespace chulakov\fileinput\behaviors;
 use chulakov\filestorage\models\BaseFile;
 use chulakov\filestorage\models\Image;
 use yii\base\Behavior;
+use yii\helpers\Html;
 
 /**
  * Поведение для модели формы или AR, упрощающее конфигурацию параметров отображения загруженный файлов в виджете FileInput
@@ -37,23 +38,25 @@ class FileModelBehavior extends Behavior
     public $type;
 
     /**
-     * Аттрибут, для которого определяются соответствующие параметры отображения в виджете FileInput
-     * @var BaseFile|BaseFile[]
+     * Парсить контент препросмотра как отображаемые данные
+     * @var bool
+     * @see http://plugins.krajee.com/file-input/plugin-options#initialPreviewConfig
      */
-    public $attribute;
+    public $previewAsData = true;
 
     /**
      * Возвращает URL-адреса к файлам
      * @see http://plugins.krajee.com/file-input/plugin-options#initialPreview
-     * @todo реализовать декорирование элементов через кложуру
+     * @param string $attribute Аттрибут, для которого определяются соответствующие параметры отображения в виджете FileInput
      * @return array|string
+     * @todo реализовать декорирование элементов через кложуру
      */
-    public function getInitialPreview()
+    public function getInitialPreview($attribute)
     {
-        $files = $this->getFiles();
+        $files = $this->getAttachedFiles($attribute);
         if (is_array($files)) {
             $previews = [];
-            foreach ($this->getFiles() as $file) {
+            foreach ($files as $file) {
                 $previews[] = $file->getUrl();
             }
             return $previews;
@@ -65,11 +68,12 @@ class FileModelBehavior extends Behavior
     /**
      * Возвращает конфигурацию для отображенрия файлов
      * @see http://plugins.krajee.com/file-input/plugin-options#initialPreviewConfig
+     * @param $attribute
      * @return array
      */
-    public function getInitialPreviewConfig()
+    public function getInitialPreviewConfig($attribute)
     {
-        $files = $this->getFiles();
+        $files = $this->getAttachedFiles($attribute);
 
         if (is_array($files)) {
             $config = [];
@@ -112,14 +116,20 @@ class FileModelBehavior extends Behavior
             'type' => $this->getType($file),
             'filetype' => $file->mime,
             'size' => $file->size,
-            'previewAsData' => true,
+            'previewAsData' => $this->previewAsData,
             'caption' => $file->ori_name,
             'key' => $file->id,
         ];
     }
 
-    protected function getFiles()
+    /**
+     * Возвращает сущность/сущности ранее загруженных файлов
+     * @param string $attribute
+     * @return BaseFile|BaseFile[]
+     */
+    protected function getAttachedFiles($attribute)
     {
-        return $this->owner->{$this->attribute};
+        $attribute = Html::getAttributeName($attribute);
+        return $this->owner->$attribute;
     }
 }
