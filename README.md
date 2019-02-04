@@ -1,9 +1,10 @@
 # yii2-fileinput
-[Krajee File Input widget](http://demos.krajee.com/widget-details/fileinput) Wrapper which implemets removal logic without ajax.
-Marking items for delete without ajax and provides files ids for removal to server throw special hidden input.
-## Usage
-### Multiple images uploading
-Configuration of widget for multiple images uploading
+Обертка над виджетом [Krajee File Input widget](http://demos.krajee.com/widget-details/fileinput).
+Реализует логику удаления файлов через скрытое поле, без AJAX.
+Добавляет упрощенную конфигурацию виджета FileInput, используя специальное поведение.
+Реализует удобную AJAX-сортировку карточек файлов виджета.
+## Использование
+### Загрузка файлов
 ```php
    <?php $form = ActiveForm::begin([
         'options' => ['enctype' => 'multipart/form-data']
@@ -11,7 +12,7 @@ Configuration of widget for multiple images uploading
 
     ...
 
-    <?= $form->field($model, 'images[]')->widget(FileInput::className(), [
+    <?= $form->field($model, 'images[]')->widget(\chulakov\fileinput\widgets\FileInput::className(), [
         'options' => [
             'multiple' => true
         ],
@@ -37,9 +38,10 @@ Configuration of widget for multiple images uploading
 
     <?php ActiveForm::end(); ?>
 ```
-### Reordering (sorting) files in widget
-The configuration parameter `sortActionRoute` determines the route to ajax-action for relocate item (change order) in DB level.
-The Drag-n-drop icon will appear automatically if the `sortActionRoute` parameter is set.
+### Изменени порядка следования файлов (сортировка) в фиджете
+Для того, чтобы сортировка работатал, при конфигурации виджета необходимо задать параметр `sortActionRoute`.
+Этот параметр содержит маршрут к AJAX-действию, которое производит непосредственное изменение порядка следования файлов.
+Иконка перетаскивания картточек появится автоматически, если этот параметр задан.
 
 Механизм изменения порядка следования полностью совместим с механизмом работы пакета [sem-soft/yii-sortable](https://github.com/sem-soft/yii2-sortable). Для сортировки файлов можно использовать этот пакет.
 Пример конфигурации совместной работы виджета и backend-сортировки представлен ниже.
@@ -79,7 +81,7 @@ The Drag-n-drop icon will appear automatically if the `sortActionRoute` paramete
 
     <?php ActiveForm::end(); ?>
 ```
-After installing the [sem-soft / yii-sortable](https://github.com/sem-soft/yii2-sortable) package, you need to configure the action `swap` in the appropriate controller.
+После установки пакета [sem-soft / yii-sortable](https://github.com/sem-soft/yii2-sortable), необходимо сконфигурировать `swap`-действие в соответствующем контроллере.
 ```php
 <?php
 ...
@@ -102,8 +104,7 @@ class SliderController extends Controller
     }
 }
 ```
-You also need to configure the behavior that will set the value of the sorted field before insert.
-An example action configuration is shown below.
+Также необходимо подключить поведение, которое будет задавать очередное значение поля `sort` при вставке новой записи.
 ```php
 <?php
 ...
@@ -132,6 +133,61 @@ class Image extends ActiveRecord
     }
 }
 ```
-More information about configuration of [sem-soft / yii-sortable](https://github.com/sem-soft/yii2-sortable).
-### Single image uploading
-Comming soon...
+Более детальную информацию можно получить в описании пакета [sem-soft / yii-sortable](https://github.com/sem-soft/yii2-sortable).
+### Получение информации предварительного просмотра при помощи поведения
+Можно скоратить время на конфигурацию виджета `FileInput` для подготовки миниатюр загруженных ранее файлов.
+При условии что управление файлами осуществляется с помощью компонента [yii2-filestorage](https://bitbucket.org/OlegChulakovStudio/yii2-filestorage).
+
+Поведение `FileModelBehavior` добавляет модели формы два метода `getInitialPreview` and `getInitialPreviewConfig`.
+Оба метода получают параметр `attribute`, указывающий имя атрибута формы, содержащего загруженные ранее сущности файлов для построения информации предпросмотра в виджете.
+
+Эти методы виджет будет вызывать автоматически при своей инициализации, если выполняются условия:
+- Форма построена на основе виджета ActiveForm
+- При конфигурации виджета не заданы ключи `initialPreview`, `initialPreviewConfig` параметра `pluginOptions`
+- При конфигурации виджета задан параметр `attachedFilesAttribute`, который указывает на имя атрибута формы содержащего загруженные ранее сущности файлов
+- К модели формы подключено поведение `\chulakov\fileinput\behaviors\FileModelBehavior`
+
+Пример конфигурации виджет `FileInput`
+```php
+    <?= $form->field($model, 'images[]')->widget(\chulakov\fileinput\widgets\FileInput::className(), [
+        'options' => [
+            'multiple' => true
+        ],
+        'sortActionRoute' => ['swap'],
+        // !!!!
+        'attachedFilesAttribute' => 'imagesAttached',
+        // ----
+        'pluginOptions' => [
+            'overwriteInitial' => false,
+            'showUpload' => false,
+            'showClose' => false,
+            'showRemove' => false,
+            'fileActionSettings' => [
+                'showRemove' => true,
+            ],
+        ]
+    ]); ?>
+```
+Поведение `FileModelBehavior` подключается в модели формы.
+Дополнительная конфигурация этого поведения не требуется.
+```php
+...
+class GalleryForm extends \yii\base\Model
+{
+    ...
+
+    /**
+     * @inheritdoc
+     */
+    public function behaviors()
+    {
+        return [
+            ...
+            [
+                'class' => \chulakov\fileinput\behaviors\FileModelBehavior::class,
+            ]
+        ];
+    }
+    ...
+}
+```

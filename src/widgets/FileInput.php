@@ -2,13 +2,15 @@
 /**
  * Файл виджета FileInput
  *
- * @copyright Copyright (c) 2017, Oleg Chulakov Studio
+ * @copyright Copyright (c) 2019, Oleg Chulakov Studio
  * @link http://chulakov.com/
  */
 
-namespace chulakov\fileinput;
+namespace chulakov\fileinput\widgets;
 
+use yii\helpers\Html;
 use yii\web\View;
+use chulakov\fileinput\assets\RemovalSupervisorAssetBundle;
 
 /**
  * Класс виджета FileInput
@@ -29,15 +31,49 @@ class FileInput extends \kartik\file\FileInput
     public $removalInputPostfix = 'Deleted';
 
     /**
+     * Наименование атрибута с ранее загруженными сущностями файлов
+     * @var string
+     */
+    public $attachedFilesAttribute;
+
+    /**
      * @inheritdoc
      */
     public function init()
     {
         parent::init();
 
+        $this->initInitialPreview();
+        $this->initInitialPreviewConfig();
         $this->attachOnChange();
         $this->attachPreRemove();
         $this->attachFileSorted();
+    }
+
+    /**
+     * Если миниатюры отображения файлов не заданы через конфигурацию виджета,
+     * то производится получить информацию о них у модели через методы поведения @see \chulakov\fileinput\behaviors\FileModelBehavior
+     */
+    protected function initInitialPreview()
+    {
+        if (!isset($this->pluginOptions['initialPreview'])) {
+            if ($this->hasModel() && $this->model->hasMethod('getInitialPreview') && $this->attachedFilesAttribute) {
+                $this->pluginOptions['initialPreview'] = $this->model->getInitialPreview($this->attachedFilesAttribute);
+            }
+        }
+    }
+
+    /**
+     * Если конфигурация отображения файлов не задана через конфигурацию виджета,
+     * то производится получить информацию о ней у модели через методы поведения @see \chulakov\fileinput\behaviors\FileModelBehavior
+     */
+    protected function initInitialPreviewConfig()
+    {
+        if (!isset($this->pluginOptions['initialPreviewConfig'])) {
+            if ($this->hasModel() && $this->model->hasMethod('getInitialPreviewConfig') && $this->attachedFilesAttribute) {
+                $this->pluginOptions['initialPreviewConfig'] = $this->model->getInitialPreviewConfig($this->attachedFilesAttribute);
+            }
+        }
     }
 
     /**
@@ -105,12 +141,14 @@ class FileInput extends \kartik\file\FileInput
                 
             },
             error: function ( jqXHR, textStatus, errorThrown ) {
+                var errors = [];
+                
                 if (jqXHR.responseJSON) {
-                    error = jqXHR.responseJSON.message;
+                    errors.push(jqXHR.responseJSON.message);
                 } else {
-                    error = jqXHR.responseJSON.message;
+                    errors.push(jqXHR.responseJSON.message);
                 }
-                alert(error);
+                
             }
         });
     }
@@ -175,8 +213,8 @@ JS;
         } else {
             $name = $this->name;
         }
-
-        return rtrim($name, '[]');
+        
+        return Html::getAttributeName($name);
     }
 
     /**
