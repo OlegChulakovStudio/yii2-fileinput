@@ -53,16 +53,22 @@ class FileModelBehavior extends Behavior
      */
     public function getInitialPreview($attribute)
     {
+        $previews = [];
         $files = $this->getAttachedFiles($attribute);
+
         if (is_array($files)) {
-            $previews = [];
+
             foreach ($files as $file) {
                 $previews[] = $file->getUrl();
             }
-            return $previews;
-        } else {
-            return $files->getUrl();
+
+        } elseif ($files instanceof BaseFile) {
+
+            $previews[] = $files->getUrl();
+
         }
+
+        return $previews;
     }
 
     /**
@@ -73,17 +79,22 @@ class FileModelBehavior extends Behavior
      */
     public function getInitialPreviewConfig($attribute)
     {
+        $config = [];
         $files = $this->getAttachedFiles($attribute);
 
         if (is_array($files)) {
-            $config = [];
+
             foreach ($files as $file) {
                 $config[] = $this->getConfig($file);
             }
-            return $config;
-        } else {
-            return $this->getConfig($files);
+
+        } elseif ($files instanceof BaseFile) {
+
+            $config[] = $this->getConfig($files);
+
         }
+
+        return $config;
     }
 
     /**
