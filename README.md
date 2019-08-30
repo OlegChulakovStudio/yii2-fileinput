@@ -191,3 +191,7 @@ class GalleryForm extends \yii\base\Model
     ...
 }
 ```
+
+Дополнительно:
+-------------
+- Поведение получения идентификатора владельца файла [FileOwnerBehavior](docs/behavior-file-owner.md)
