@@ -7,7 +7,7 @@
         "php": ">=5.6.0",
         "yiisoft/yii2": "~2.0.16",
         "kartik-v/yii2-widget-fileinput": "~1.0.0",
-        "oleg-chulakov-studio/yii2-filestorage": "^1.1"
+        "oleg-chulakov-studio/yii2-filestorage": "^1.1 || ^2.0"
     },
     "authors": [
         {
